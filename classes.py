@@ -1,7 +1,8 @@
 # Classes required for the project
 
-import subprocess, datetime, os
+import subprocess, datetime, os, sys
 from pathlib import Path
+from constants import *
 
 __all__ = [
     "File",
@@ -124,25 +125,31 @@ class ProjectTemplate:
     def __init__(
             self, 
             project_name:str, 
-            template:str, 
+            template:str='pyproject', 
+            project_author:str=None,
             root_dir:Path=None
     ):
-        self.project_name:str = project_name.title().replace(' ', '_')
-        self.template:str = template
-        self.root_dir:Path = (
+        self._project_name:str = project_name
+        self._template:str = template
+        self._root_dir:Path = (
             Path.cwd()
             if root_dir is None
             else Path(root_dir)
+        )
+        self._author = (
+            project_author
+            if project_author
+            else "Indrajit Ghosh"
         )
 
     def create_project(self):
 
         # Create the project_dir
-        if self.template == 'pyproject':
+        if self._template == 'pyproject':
             self.create_pyproject_template()
-        elif self.template == 'flaskapp':
+        elif self._template == 'flaskapp':
             pass
-        elif self.template == 'pyscript':
+        elif self._template == 'pyscript':
             pass
         else:
             print("Invalid template name")
@@ -151,41 +158,55 @@ class ProjectTemplate:
         """
         Creates a Python project
         """
-        pass
+        _proj_name = self._project_name.title().replace(' ', '_')
+        project_dir = Directory(name=_proj_name)
+
+        # Add .gitignore
+        project_dir.add_file(
+            name=".gitignore",
+            content=PY_GITIGNORE
+        )
+
+        # Add `main.py`
+        project_dir.add_file(
+            name="main.py",
+            content=MAIN_PY % (_proj_name, self._author, self.TODAY)
+        )
+
+        # Add `requirements.txt`
+        project_dir.add_file(
+            name="requirements.txt",
+            content=REQUIREMENTS
+        )
+
+        # Create the project_dir
+        project_dir.create(path=self._root_dir)
+        project_dir_path = self._root_dir / _proj_name
+
+        # Create venv
+        self.create_virtualenv(
+            venv_path=project_dir_path / "env",
+            python_executable=sys.executable
+        )
 
 
     def create_virtualenv(self, venv_path:Path, python_executable:Path):
         try:
-            subprocess.run(['virtualenv', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-            subprocess.run([python_executable, "-m", "virtualenv", venv_path])
-
+            subprocess.run(
+                [python_executable, "-m", 'virtualenv', '--version'], 
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+            )
+            subprocess.run(
+                [python_executable, "-m", "virtualenv", str(venv_path)],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+            )
         except subprocess.CalledProcessError:
-            import venv
-            builder = venv.EnvBuilder(system_site_packages=False, with_pip=True, prompt='(my_venv) ')
-            builder.create(venv_path, symlinks=False, clear=True, upgrade=True, python=python_executable)
-
-
+            print("\nERROR: `virtualenv` is not installed. Use following cmd to install:\n\t `python3 -m pip install virtualenv`\n")
+            
 
 if __name__ == "__main__":
     # Create a root directory
-    root = Directory(
-        name="fancy_dir",
-    )
+    proj = ProjectTemplate(project_name="Testing", root_dir=Path.home() / "Desktop")
 
-    # Add files and subdirectories
-    root.add_file("file1.txt", content="Hello, world!")
-    root.add_directory("subdir1")
-
-    # Access and modify a subdirectory
-    subdir1 = root._content["subdir1"]
-    subdir1.add_file("file2.txt", content="This is a text file.")
-    subdir1.add_file("binary.dat", binary_content=b"\x00\x01\x02\x03")
-
-    # Create another subdirectory and add files
-    root.add_directory("subdir2")
-    subdir2 = root._content["subdir2"]
-    subdir2.add_file("file3.txt", content="Another text file.")
-
-    # Print the directory structure
-    print(root)
+    proj.create_project()
 

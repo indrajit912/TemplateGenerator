@@ -1,5 +1,17 @@
 # Constants
 
+MAIN_PY = r"""# %s - Description
+#
+# Author: %s
+# Created on: %s
+#
+"""
+
+REQUIREMENTS = """
+# Write down the modules you need to install and then
+# run the cmd: ```pip install -r requirements.txt```
+"""
+
 PY_GITIGNORE = r"""
 ### Python ###
 # Byte-compiled / optimized / DLL files
