@@ -45,6 +45,13 @@ class File:
     def name(self, new_name):
         self._name = new_name if new_name else "untitled_file"
 
+    @classmethod
+    def instantiate_from_file_path(cls, filepath: Path):
+        filepath = Path(filepath)
+        with filepath.open("rb") as f:
+            binary_content = f.read()
+        return cls(binary_content=binary_content, name=filepath.name)
+
     def create(self, path):
         path = Path(path) / self._name
         if self._binary_content:
@@ -61,6 +68,13 @@ class Directory:
     Author: Indrajit Ghosh
     Created On: Aug 20, 2023
     """
+    IGNORE = (
+        '.git', 
+        '__pycache__',
+        'env',
+        'venv'
+    )
+
     def __init__(self, name=None):
         self._content = {}
         self._name = name if name else "untitled_directory"
@@ -99,17 +113,68 @@ class Directory:
             elif isinstance(entry, Directory):
                 entry.create(root_path)
 
-    def __str__(self, level=0):
+
+    def _generate_entry_strings(self, level=0):
         indent = "    "
-        output = ""
         for name, entry in self._content.items():
-            output += f"{indent * level}{name}"
+            entry_string = f"{indent * level}{name}"
             if isinstance(entry, File):
-                output += " (File)\n"
+                entry_string += " (File)"
             elif isinstance(entry, Directory):
-                output += " (Directory)\n"
-                output += entry.__str__(level + 1)
-        return output
+                entry_string += " (Directory)"
+            yield entry_string
+            if isinstance(entry, Directory):
+                yield from entry._generate_entry_strings(level + 1)
+
+    def _tree(self, prefix:str=''):
+        # prefixes:
+        space =  '    '
+        branch = '│   '
+
+        # pointers:
+        tee =    '├── '
+        last =   '└── '
+
+        contents = list(self._content)
+        pointers = [tee] * (len(self._content) - 1) + [last]
+
+        for pointer, entry in zip(pointers, contents):
+            if entry in self.IGNORE:
+                continue
+
+            yield prefix + pointer + entry
+
+            if isinstance(self._content[entry], Directory):
+                extension = branch if pointer == tee else space
+                subdir: Directory = self._content[entry]
+                yield from subdir._tree(prefix=prefix + extension)
+
+    def __str__(self):
+        return "\n".join(self._tree())
+    
+
+    @classmethod
+    def instantiate_dir_from_path(cls, dir_path: Path):
+        dir_path = Path(dir_path)
+        directory = cls(name=dir_path.name)  # Create a Directory instance with the directory name
+        
+        for entry_path in dir_path.iterdir():
+            entry_name = entry_path.name
+
+            if entry_name in cls.IGNORE:
+                continue  # Skip specific directories
+
+            if entry_path.is_file():
+                def read_file_content(file_path):
+                    with file_path.open("rb") as f:
+                        return f.read()
+                directory.add_file(entry_name, binary_content=read_file_content(entry_path))
+            elif entry_path.is_dir():
+                sub_directory = cls.instantiate_dir_from_path(entry_path)
+                directory.add_directory(entry_name)
+                directory._content[entry_name] = sub_directory
+        
+        return directory
 
 
 class ProjectTemplate:
@@ -126,7 +191,7 @@ class ProjectTemplate:
             self, 
             project_name:str, 
             template:str='pyproject', 
-            project_author:str=None,
+            project_author:str="Indrajit Ghosh",
             root_dir:Path=None
     ):
         self._project_name:str = project_name
@@ -136,11 +201,7 @@ class ProjectTemplate:
             if root_dir is None
             else Path(root_dir)
         )
-        self._author = (
-            project_author
-            if project_author
-            else "Indrajit Ghosh"
-        )
+        self._author = project_author
 
     def create_project(self):
 
@@ -205,8 +266,10 @@ class ProjectTemplate:
             
 
 if __name__ == "__main__":
-    # Create a root directory
-    proj = ProjectTemplate(project_name="Testing", root_dir=Path.home() / "Desktop")
+    dir_path = Path("/home/indrajit/Documents/hello_world/python/BoringAutomate/LaTexBot")
 
-    proj.create_project()
+    dirObj = Directory.instantiate_dir_from_path(dir_path)
+    print(dirObj)
+
+    
 
