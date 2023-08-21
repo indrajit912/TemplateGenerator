@@ -7,10 +7,182 @@ MAIN_PY = r"""# %s - Description
 #
 """
 
+RUN_PY = r'''# %s
+#
+# Author: %s
+# Created on: %s
+#
+
+"""
+Run Flask Web App
+
+This script starts the Flask development server to run the web application.
+
+Usage:
+    python run.py
+
+Note:
+    Make sure you have the necessary dependencies installed and the virtual environment activated.
+
+"""
+
+from app import app
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)'''
+
 REQUIREMENTS = """
 # Write down the modules you need to install and then
 # run the cmd: ```pip install -r requirements.txt```
 """
+
+FLASK_APP_CONFIG_PY = r'''"""
+Flask App Configuration
+
+This module defines configuration settings for the Flask web application.
+
+"""
+import os
+from os.path import join, dirname
+from dotenv import load_dotenv
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
+# Set your secrets from `.env` in the following way
+# MY_PASSWD = os.environ.get("MY_PASSWD")''' # Uncomment this line
+
+README_MD = r"""# Write your Markdown here"""
+
+ROUTES_PY = r'''"""
+Routes and Views
+
+This module defines the routes and views for the Flask web application.
+
+Author: %s
+Created on: %s
+
+Attributes:
+    app (Flask): The Flask web application instance.
+"""
+
+
+from flask import render_template
+from app import app
+from config import *
+
+######################################################################
+#                           Home
+######################################################################
+@app.route('/')
+def index():
+    """
+    Render the index page.
+
+    Returns:
+        str: The rendered HTML template for the index page.
+    """
+    return render_template('index.html')
+
+'''
+
+FLASK_REQU = r"""# Write down the modules you need to install and then
+# run the cmd: ```pip install -r requirements.txt```
+Flask==2.0.1
+gunicorn
+python-dotenv
+"""
+
+FLASK_STYLE_CSS = r"""/* app/static/css/style.css */
+
+/* Reset some default styles */
+body, h1, h2, p, a {
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+    color: #001233; /* Your desired heading color */
+    margin-bottom: 10px;
+}
+
+
+/* Body background color */
+body {
+    background-color: #f2f2f2;
+    font-size: 16px;
+    line-height: 1.6;
+}"""
+
+FLASK_INIT = r'''"""
+Flask Web App Initialization
+
+This module initializes the Flask web application instance, configures it, and imports the routes and extensions.
+
+Attributes:
+    app (Flask): The Flask web application instance.
+"""
+from flask import Flask
+
+app = Flask(__name__)
+
+# Import routes and extensions
+from app import routes
+'''
+
+FLASK_APP_INDEX_HTML = r"""<!--
+Index Page Template
+
+This HTML template defines the structure and content of the index page for the Flask web application.
+
+Template Variables:
+    None
+
+Template Blocks:
+    content: This block can be extended by child templates to provide specific content.
+
+Google Fonts API:
+    https://fonts.google.com/
+
+-->
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Home</title>
+    </head>
+
+    <body>
+        <h1>Hello World!</h1>
+    </body>
+</html>
+"""
+
+MIT_LICENSE = r"""MIT License
+
+Copyright (c) 2023 Indrajit Ghosh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE."""
 
 PY_GITIGNORE = r"""
 ### Python ###

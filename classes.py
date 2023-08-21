@@ -1,12 +1,17 @@
 # Classes required for the project
+#
+# Author: Indrajit Ghosh
+# Created On: Aug 20, 2023
+#
 
-import subprocess, datetime, os, sys
+import subprocess, datetime, sys
 from pathlib import Path
 from constants import *
 
 __all__ = [
     "File",
-    "Directory"
+    "Directory",
+    "ProjectTemplate"
 ]
 
 class File:
@@ -15,6 +20,10 @@ class File:
 
     Author: Indrajit Ghosh
     Created On: Aug 20, 2023
+
+    :param `content`: Text content of the file.
+    :param `binary_content`: Binary content of the file.
+    :param `name`: Name of the file.
     """
     def __init__(self, content=None, binary_content=None, name=None):
         self._content = content
@@ -155,6 +164,12 @@ class Directory:
 
     @classmethod
     def instantiate_dir_from_path(cls, dir_path: Path):
+        """
+        Create a Directory instance by instantiating it from a directory path.
+
+        :param `dir_path`: Path to the directory.
+        :return: A Directory instance representing the directory contents.
+        """
         dir_path = Path(dir_path)
         directory = cls(name=dir_path.name)  # Create a Directory instance with the directory name
         
@@ -207,17 +222,44 @@ class ProjectTemplate:
 
         # Create the project_dir
         if self._template == 'pyproject':
-            self.create_pyproject_template()
+            proj_dir: Path = self._create_pyproject_template()
         elif self._template == 'flaskapp':
-            pass
+            proj_dir: Path = self._create_flaskapp_template()
         elif self._template == 'pyscript':
+            # TODO: 
             pass
         else:
             print("Invalid template name")
+            sys.exit(1)
+        
+        # Print necessary info
+        if self._template != 'pyscript':
+            msg = (
+                f"\n1. A `{self._template}` has been created at the following dir:"
+                + f"\n\t`{proj_dir}`"
+                + "\n\n2. A virtualenv has been created too. You can use the following cmds to activate it:"
+                + f"\n\t- cd {proj_dir}"
+                + "\n\t- source env/bin/activate\n"
+            )
 
-    def create_pyproject_template(self):
+            if self._template == 'flaskapp':
+                msg += (
+                    "\n3. You can run the flaskapp by the following cmd:"
+                    + "\n\t- source env/bin/activate"
+                    + "\n\t- pip install -r requirements.txt"
+                    + "\n\t- env/bin/python run.py\n"
+                )
+
+            print(msg)
+
+
+    def _create_pyproject_template(self):
         """
-        Creates a Python project
+        Creates a Python project.
+
+        Returns:
+        --------
+            `project_dir_path`: Path
         """
         _proj_name = self._project_name.title().replace(' ', '_')
         project_dir = Directory(name=_proj_name)
@@ -242,13 +284,126 @@ class ProjectTemplate:
 
         # Create the project_dir
         project_dir.create(path=self._root_dir)
-        project_dir_path = self._root_dir / _proj_name
+        project_dir_path: Path = self._root_dir / _proj_name
 
         # Create venv
         self.create_virtualenv(
             venv_path=project_dir_path / "env",
             python_executable=sys.executable
         )
+
+        return project_dir_path
+    
+    def _create_flaskapp_template(self):
+        """
+        Creates a Flask App project.
+
+        Returns:
+        --------
+            `project_dir_path`: Path
+        """
+        _proj_name = self._project_name.title().replace(' ', '_')
+        project_dir = Directory(name=_proj_name)
+
+        # Add `app` directory
+        project_dir.add_directory(name='app')
+
+        # Add `app/routes.py`
+        project_dir._content['app'].add_file(
+            name='routes.py',
+            content=ROUTES_PY
+        )
+
+        # Add `app/__init__.py`
+        project_dir._content['app'].add_file(
+            name="__init__.py",
+            content=FLASK_INIT
+        )
+
+        # Add `app/templates`
+        project_dir._content['app'].add_directory(
+            name="templates"
+        )
+
+        # Add `app/templates/index.html`
+        project_dir._content['app']._content['templates'].add_file(
+            name="index.html",
+            content=FLASK_APP_INDEX_HTML
+        )
+
+        # Add `app/static/`
+        project_dir._content['app'].add_directory(
+            name="static"
+        )
+
+        # Add `app/static/css`
+        project_dir._content['app']._content['static'].add_directory(
+            name="css"
+        )
+
+        # Add `app/static/css/style.css`
+        project_dir._content['app']._content['static']._content['css'].add_file(
+            name="style.css",
+            content=FLASK_STYLE_CSS
+        )
+
+        # Add `app/static/images`
+        project_dir._content['app']._content['static'].add_directory(
+            name="images"
+        )
+        
+
+        # Add .gitignore
+        project_dir.add_file(
+            name=".gitignore",
+            content=PY_GITIGNORE
+        )
+
+        # Add `run.py`
+        project_dir.add_file(
+            name="run.py",
+            content=RUN_PY % (_proj_name, self._author, self.TODAY)
+        )
+
+        # Add `requirements.txt`
+        project_dir.add_file(
+            name="requirements.txt",
+            content=FLASK_REQU
+        )
+
+        # Add `config.py`
+        project_dir.add_file(
+            name="config.py",
+            content=FLASK_APP_CONFIG_PY
+        )
+
+        # Add `README.md`
+        project_dir.add_file(
+            name="README.md",
+            content=README_MD
+        )
+
+        # Add `LICENSE`
+        project_dir.add_file(
+            name="LICENSE",
+            content=MIT_LICENSE
+        )
+
+        # Add `scripts` dir
+        project_dir.add_directory(name="scripts")
+
+
+        # Create the project_dir
+        project_dir.create(path=self._root_dir)
+        project_dir_path: Path = self._root_dir / _proj_name
+
+        # Create venv
+        self.create_virtualenv(
+            venv_path=project_dir_path / "env",
+            python_executable=sys.executable
+        )
+
+        return project_dir_path
 
 
     def create_virtualenv(self, venv_path:Path, python_executable:Path):
@@ -266,10 +421,4 @@ class ProjectTemplate:
             
 
 if __name__ == "__main__":
-    dir_path = Path("/home/indrajit/Documents/hello_world/python/BoringAutomate/LaTexBot")
-
-    dirObj = Directory.instantiate_dir_from_path(dir_path)
-    print(dirObj)
-
-    
-
+    print("\nClasses required for `ProjectTemplate`.\n")
