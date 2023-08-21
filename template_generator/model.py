@@ -154,18 +154,28 @@ class Directory:
 
     def _colored_entry(self, entry_name, entry_type):
         if entry_type == "File":
-            # TODO: Use Path(entry_type)
-            if entry_name.endswith('.py'):
+            fileobj = Path(entry_name)
+
+            if fileobj.suffix == '.py':
                 color_code = self.STYLE['py']
 
-            elif entry_name.endswith('.pdf'):
+            elif fileobj.suffix == '.pdf':
                 color_code = self.STYLE['pdf']
 
-            elif entry_name.endswith('.tex'):
+            elif fileobj.suffix == '.tex':
                 color_code = self.STYLE['tex']
 
-            elif entry_name.endswith('.txt'):
+            elif fileobj.suffix == '.txt':
                 color_code = self.STYLE['txt']
+
+            elif fileobj.suffix in ['.jpg', '.png', '.jpeg', '.JPG', '.PNG', 'JPEG']:
+                color_code = self.STYLE['image']
+
+            elif fileobj.suffix in ['.mp4', '.mkv', '.mov', '.MOV']:
+                color_code = self.STYLE['video']
+
+            elif fileobj.suffix == '.bib':
+                color_code = self.STYLE['bib']
 
             else:
                 color_code = self.STYLE['file']
