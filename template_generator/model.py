@@ -67,9 +67,12 @@ class File:
         if self._binary_content:
             with path.open("wb") as f:
                 f.write(self._binary_content)
-        else:
+        elif self._content:
             with path.open("w") as f:
                 f.write(self._content)
+        else:
+            with path.open("w") as f:
+                f.write("")
 
 class Directory:
     """
@@ -320,6 +323,23 @@ class ProjectTemplate:
         _proj_name = self._project_name.title().replace(' ', '_')
         project_dir = Directory(name=_proj_name)
 
+        # Add `_proj_name` dir
+        project_dir.add_directory(
+            name=_proj_name
+        )
+
+        # Add `_proj_name/__init__.py`
+        project_dir._content[_proj_name].add_file(
+            name="__init__.py",
+            content=PYPROJ_INIT_PY % _proj_name
+        )
+
+        # Add `_proj_name/model.py`
+        project_dir._content[_proj_name].add_file(
+            name="model.py",
+            content=MODEL_PY % (_proj_name, self._author, self.TODAY)
+        )
+
         # Add .gitignore
         project_dir.add_file(
             name=".gitignore",
@@ -329,7 +349,7 @@ class ProjectTemplate:
         # Add `main.py`
         project_dir.add_file(
             name="main.py",
-            content=MAIN_PY % (_proj_name, self._author, self.TODAY)
+            content=MAIN_PY % (_proj_name, self._author, self.TODAY, _proj_name)
         )
 
         # Add `requirements.txt`
@@ -337,6 +357,17 @@ class ProjectTemplate:
             name="requirements.txt",
             content=REQUIREMENTS
         )
+
+        # Add `README.md`
+        project_dir.add_file(
+            name="README.md"
+        )
+
+        # Add `setup.py`
+        project_dir.add_file(
+            name="setup.py"
+        )
+
 
         # Create the project_dir
         project_dir.create(path=self._root_dir)

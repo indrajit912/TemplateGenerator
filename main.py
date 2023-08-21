@@ -9,9 +9,14 @@ from pathlib import Path
 from template_generator import *
 
 def main():
-    my_dir = Directory.instantiate_dir_from_path(Path.cwd())
+    proj = ProjectTemplate(
+        project_name="test project",
+        root_dir=Path.home() / "Desktop",
+        template='pyproject'
+    )
 
-    print(my_dir.tree)
+    proj.create_project()
+
 
 
 if __name__ == '__main__':

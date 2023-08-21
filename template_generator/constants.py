@@ -6,6 +6,15 @@ MAIN_PY = r"""# %s - Description
 # Author: %s
 # Created on: %s
 #
+
+from %s import *
+
+def main():
+    print("Hello World!")
+
+
+if __name__ == '__main__':
+    main()
 """
 
 RUN_PY = r'''# %s
@@ -351,6 +360,22 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
+"""
+
+PYPROJ_INIT_PY = r'''# %s/__init__.py
+
+# Import statements
+from .model import *
+
+# Package-level variables
+version = "1.0"
+'''
+
+MODEL_PY = r"""# %s/model.py
+#
+# Author: %s
+# Created on: %s
+#
 """
 
 # 7-bit C1 ANSI sequences
