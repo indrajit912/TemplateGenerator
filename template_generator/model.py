@@ -285,8 +285,15 @@ class ProjectTemplate:
         elif self._template == 'flaskapp':
             proj_dir: Path = self._create_flaskapp_template()
         elif self._template == 'pyscript':
-            # TODO: 
-            pass
+            _script_name = self._project_name.lower().replace(' ', '_')
+
+            # Create `_script_name.py`
+            script = File(
+                name=_script_name + ".py",
+                content=SCRIPT_MAIN_PY % (_script_name, self._author, self.TODAY)
+            )
+            script.create(path=self._root_dir)
+            
         else:
             print("Invalid template name")
             sys.exit(1)
@@ -310,6 +317,10 @@ class ProjectTemplate:
                 )
 
             print(msg)
+
+        else:
+            print("\nA `pyscript` has been created at the following path:")
+            print(f"\t{self._root_dir}/{_script_name}\n")
 
 
     def _create_pyproject_template(self):
@@ -360,7 +371,8 @@ class ProjectTemplate:
 
         # Add `README.md`
         project_dir.add_file(
-            name="README.md"
+            name="README.md",
+            content=README_MD
         )
 
         # Add `setup.py`

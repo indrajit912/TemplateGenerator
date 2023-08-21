@@ -1,6 +1,13 @@
 # Constants
 import re
 
+SCRIPT_MAIN_PY = r"""# %s - Description
+#
+# Author: %s
+# Created on: %s
+#
+"""
+
 MAIN_PY = r"""# %s - Description
 #
 # Author: %s

@@ -8,14 +8,20 @@ import sys, os
 from pathlib import Path
 from template_generator import *
 
+TEMPLATES = [
+    "pyscript",
+    "pyproject",
+    "flaskapp"
+]
+
 def main():
-    proj = ProjectTemplate(
-        project_name="test project",
+    script = ProjectTemplate(
+        project_name="fancy_scr.py",
         root_dir=Path.home() / "Desktop",
-        template='pyproject'
+        template='pyscript'
     )
 
-    proj.create_project()
+    script.create_project()
 
 
 
