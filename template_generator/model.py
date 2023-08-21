@@ -85,6 +85,22 @@ class Directory:
         'venv'
     )
 
+    STYLE = {
+        "dir": IndraStyle.AQUA + IndraStyle.BOLD,
+        "file": IndraStyle.ORANGE,
+        "image": IndraStyle.CRIMSON,
+        "txt": IndraStyle.MEDIUM_ORCHID,
+        "pdf": IndraStyle.AQUA_MARINE,
+        "video": IndraStyle.PURPLE,
+        "py": IndraStyle.PINK,
+        "ipynb": IndraStyle.CADET_BLUE,
+        "json": IndraStyle.PALE_TURQUOISE,
+        "md": IndraStyle.GREEN_YELLOW,
+        "reset": IndraStyle.END,
+        "tex": IndraStyle.BLUE_VIOLET,
+        "bib": IndraStyle.CRIMSON
+    }
+
     def __init__(self, name=None):
         self._content = {}
         self._name = name if name else "untitled_directory"
@@ -138,7 +154,22 @@ class Directory:
 
     def _colored_entry(self, entry_name, entry_type):
         if entry_type == "File":
-            color_code = IndraStyle.ORANGE  # Orange color for files
+            # TODO: Use Path(entry_type)
+            if entry_name.endswith('.py'):
+                color_code = self.STYLE['py']
+
+            elif entry_name.endswith('.pdf'):
+                color_code = self.STYLE['pdf']
+
+            elif entry_name.endswith('.tex'):
+                color_code = self.STYLE['tex']
+
+            elif entry_name.endswith('.txt'):
+                color_code = self.STYLE['txt']
+
+            else:
+                color_code = self.STYLE['file']
+
         else:
             color_code = IndraStyle.AQUA + IndraStyle.BOLD  # Green color for directories
 
