@@ -6,7 +6,8 @@
 
 import subprocess, datetime, sys
 from pathlib import Path
-from constants import *
+from .constants import *
+from .terminal_style import IndraStyle
 
 __all__ = [
     "File",
@@ -135,6 +136,16 @@ class Directory:
             if isinstance(entry, Directory):
                 yield from entry._generate_entry_strings(level + 1)
 
+    def _colored_entry(self, entry_name, entry_type):
+        if entry_type == "File":
+            color_code = IndraStyle.ORANGE  # Orange color for files
+        else:
+            color_code = IndraStyle.AQUA + IndraStyle.BOLD  # Green color for directories
+
+        reset_code = "\033[0m"  # Reset color
+
+        return f"{color_code}{entry_name}{reset_code}"
+
     def _tree(self, prefix:str=''):
         # prefixes:
         space =  '    '
@@ -151,15 +162,19 @@ class Directory:
             if entry in self.IGNORE:
                 continue
 
-            yield prefix + pointer + entry
+            yield prefix + pointer + self._colored_entry(entry, "File" if isinstance(self._content[entry], File) else "Directory")
 
             if isinstance(self._content[entry], Directory):
                 extension = branch if pointer == tee else space
                 subdir: Directory = self._content[entry]
                 yield from subdir._tree(prefix=prefix + extension)
 
-    def __str__(self):
+    @property
+    def tree(self):
         return "\n".join(self._tree())
+
+    def __str__(self):
+        return ANSI_ESCAPE.sub('', "\n".join(self._tree()))
     
 
     @classmethod

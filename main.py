@@ -5,11 +5,13 @@
 # Created on: Aug 20, 2023
 #
 import sys, os
-from classes import *
+from pathlib import Path
+from template_generator import *
 
 def main():
-    print('hello world!')
-    # TODO: Take the user args
+    my_dir = Directory.instantiate_dir_from_path(Path.cwd())
+
+    print(my_dir.tree)
 
 
 if __name__ == '__main__':

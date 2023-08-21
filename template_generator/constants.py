@@ -1,4 +1,5 @@
 # Constants
+import re
 
 MAIN_PY = r"""# %s - Description
 #
@@ -351,3 +352,17 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 """
+
+# 7-bit C1 ANSI sequences
+ANSI_ESCAPE = re.compile(r"""
+    \x1B  # ESC
+    (?:   # 7-bit C1 Fe (except CSI)
+        [@-Z\\-_]
+    |     # or [ for CSI, followed by a control sequence
+        \[
+        [0-?]*  # Parameter bytes
+        [ -/]*  # Intermediate bytes
+        [@-~]   # Final byte
+    )
+""", re.VERBOSE
+)
