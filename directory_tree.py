@@ -5,7 +5,7 @@
 #
 
 from template_generator import Directory
-import sys
+import sys, pyperclip
 from pathlib import Path
 
 def main():
@@ -37,6 +37,7 @@ def main():
     given_dir_tree = "\n".join(Directory.get_tree_from_path(given_dir))
 
     print(given_dir_tree)
+    pyperclip.copy(given_dir_tree)
     
 
 if __name__ == '__main__':
