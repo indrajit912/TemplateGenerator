@@ -1,4 +1,4 @@
-# Project Template Generator
+# Template Generator
 
 This repository contains a Python package named `template_generator` developed by Indrajit Ghosh. This package provides classes for generating project templates and creating project structures with ease. It includes features such as creating directories, files, and project templates like `pyproject`, `flaskapp`, and more.
 
@@ -12,7 +12,53 @@ This repository contains a Python package named `template_generator` developed b
 
 ## Installation
 
-Will be updated soon!
+- Open Terminal window!
+- `clone` this repo by
+```bash
+git clone https://github.com/indrajit912/TemplateGenerator.git
+```
+- Change the working directory to `TemplateGenerator` by
+```bash
+cd TemplateGenerator
+```
+- Create a `virtualenv` by
+```bash
+virtualenv env
+```
+- Activate the `virtualenv`
+```bash
+source env/bin/activate
+```
+- Install dependencies by
+```bash
+pip install -r requirements.txt
+```
+- Run `main.py`
+```bash
+python3 main.py
+```
+- Run `directory_tree.py`
+```bash
+python3 directory_tree.py
+```
+Output:
+```bash
+├── requirements.txt
+├── directory_tree.py
+├── main.py
+├── template_generator
+│   ├── terminal_style.py
+│   ├── __init__.py
+│   ├── model.py
+│   ├── constants.py
+├── tests
+├── scripts
+│   └── utils.py
+├── README.md
+├── setup.py
+├── .gitignore
+```
+
 
 ## Usage
 
