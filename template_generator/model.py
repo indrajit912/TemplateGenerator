@@ -155,33 +155,34 @@ class Directory:
             if isinstance(entry, Directory):
                 yield from entry._generate_entry_strings(level + 1)
 
-    def _colored_entry(self, entry_name, entry_type):
+    @classmethod
+    def _colored_entry(cls, entry_name, entry_type):
         if entry_type == "File":
             fileobj = Path(entry_name)
 
             if fileobj.suffix == '.py':
-                color_code = self.STYLE['py']
+                color_code = cls.STYLE['py']
 
             elif fileobj.suffix == '.pdf':
-                color_code = self.STYLE['pdf']
+                color_code = cls.STYLE['pdf']
 
             elif fileobj.suffix == '.tex':
-                color_code = self.STYLE['tex']
+                color_code = cls.STYLE['tex']
 
             elif fileobj.suffix == '.txt':
-                color_code = self.STYLE['txt']
+                color_code = cls.STYLE['txt']
 
             elif fileobj.suffix in ['.jpg', '.png', '.jpeg', '.JPG', '.PNG', 'JPEG']:
-                color_code = self.STYLE['image']
+                color_code = cls.STYLE['image']
 
             elif fileobj.suffix in ['.mp4', '.mkv', '.mov', '.MOV']:
-                color_code = self.STYLE['video']
+                color_code = cls.STYLE['video']
 
             elif fileobj.suffix == '.bib':
-                color_code = self.STYLE['bib']
+                color_code = cls.STYLE['bib']
 
             else:
-                color_code = self.STYLE['file']
+                color_code = cls.STYLE['file']
 
         else:
             color_code = IndraStyle.AQUA + IndraStyle.BOLD  # Green color for directories
@@ -250,8 +251,8 @@ class Directory:
         
         return directory
     
-    @staticmethod
-    def get_tree_from_path(dir_path: Path, prefix: str=''):
+    @classmethod
+    def get_tree_from_path(cls, dir_path: Path, prefix: str=''):
         """A recursive generator, given a directory Path object
         will yield a visual tree structure line by line
         with each line prefixed by the same characters
@@ -269,11 +270,14 @@ class Directory:
         for pointer, path in zip(pointers, contents):
             if path.name in Directory.IGNORE:
                 continue  # Skip specific directories
-            yield prefix + pointer + path.name
+            yield prefix + pointer + cls._colored_entry(
+                entry_name=path.name,
+                entry_type='File' if path.is_file() else 'Directory'
+            )
             if path.is_dir(): # extend the prefix and recurse:
                 extension = branch if pointer == tee else space 
                 # i.e. space because last, └── , above so no more |
-                yield from Directory.get_tree_from_path(path, prefix=prefix+extension)
+                yield from cls.get_tree_from_path(path, prefix=prefix+extension)
 
 
 class ProjectTemplate:

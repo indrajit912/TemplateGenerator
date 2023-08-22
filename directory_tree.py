@@ -4,7 +4,7 @@
 # Created On: Aug 21, 2023
 #
 
-from template_generator import Directory
+from template_generator import Directory, ANSI_ESCAPE
 import sys, pyperclip
 from pathlib import Path
 
@@ -36,8 +36,12 @@ def main():
 
     given_dir_tree = "\n".join(Directory.get_tree_from_path(given_dir))
 
+    # Print the tree with ANSI on the terminal
     print(given_dir_tree)
-    pyperclip.copy(given_dir_tree)
+
+    # Escape ANSI
+    given_dir_tree_without_ansi = ANSI_ESCAPE.sub('', given_dir_tree)
+    pyperclip.copy(given_dir_tree_without_ansi)
     
 
 if __name__ == '__main__':
