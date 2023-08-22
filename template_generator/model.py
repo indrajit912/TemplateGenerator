@@ -365,7 +365,7 @@ class ProjectTemplate:
 
         # Add `_proj_name` dir
         project_dir.add_directory(
-            name=_proj_name
+            name=_proj_name.lower()
         )
 
         # Add `_proj_name/__init__.py`
