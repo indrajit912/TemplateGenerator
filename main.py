@@ -6,13 +6,32 @@
 #
 from pathlib import Path
 from template_generator import *
-import click
+import click, sys, os
 
 TEMPLATES = [
     "pyscript",
     "pyproject",
-    "flaskapp"
+    "flaskapp",
+    "quit"
 ]
+
+def clear_terminal_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def choose_from_list(lst: list):
+    clear_terminal_screen()
+    for i, item in enumerate(lst, start=1):
+        print(f"\033[96m  {i}. \033[0m\033[93m{item}\033[0m")
+    
+    while True:
+        try:
+            choice = int(input(f"\n{IndraStyle.TURQUOISE}Which option do you want to choose: \033[0m"))
+            if 1 <= choice <= len(lst):
+                return lst[choice - 1]
+            else:
+                print("\033[91mInvalid option. Please choose a valid number.\033[0m")
+        except ValueError:
+            print("\033[91mInvalid input. Please enter a number.\033[0m")
 
 def pyscript_template():
     # Functionality for pyscript template
@@ -81,17 +100,35 @@ def flaskapp_template():
     _app.create_project()
 
 
-TEMPLATES_MAP = {
-    "pyscript": pyscript_template,
-    "pyproject": pyproject_template,
-    "flaskapp": flaskapp_template
-}
+def main():
+    if len(sys.argv) < 2:
+        template_choice = choose_from_list(TEMPLATES)
+    elif len(sys.argv) == 2:
+        template_choice = sys.argv[1]
 
-@click.command()
-@click.option('--template', prompt='Choose a template', type=click.Choice(TEMPLATES))
-def main(template):
-    template_function = TEMPLATES_MAP[template]
-    template_function()
+    else:
+        msg = r"""TemplateGenerator
+Author: Indrajit Ghosh
+
+Usages:
+    1. python3 main.py
+    2. python3 main.py pyproject
+"""
+        print(msg)
+
+        sys.exit(1)
+
+    if template_choice == 'pyscript':
+        pyscript_template()
+    elif template_choice == 'pyproject':
+        pyproject_template()
+    elif template_choice == 'flaskapp':
+        flaskapp_template()
+    elif template_choice == 'quit':
+        sys.exit()
+    else:
+        print(f"ERROR: Unknown template '{template_choice}'.\n")
+
 
 
 if __name__ == '__main__':
