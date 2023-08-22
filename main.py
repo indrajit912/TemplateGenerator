@@ -6,7 +6,8 @@
 #
 from pathlib import Path
 from template_generator import *
-import click, sys, os
+import sys
+from scripts.utils import *
 
 TEMPLATES = [
     "pyscript",
@@ -14,24 +15,6 @@ TEMPLATES = [
     "flaskapp",
     "quit"
 ]
-
-def clear_terminal_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-def choose_from_list(lst: list):
-    clear_terminal_screen()
-    for i, item in enumerate(lst, start=1):
-        print(f"\033[96m  {i}. \033[0m\033[93m{item}\033[0m")
-    
-    while True:
-        try:
-            choice = int(input(f"\n{IndraStyle.TURQUOISE}Which option do you want to choose: \033[0m"))
-            if 1 <= choice <= len(lst):
-                return lst[choice - 1]
-            else:
-                print("\033[91mInvalid option. Please choose a valid number.\033[0m")
-        except ValueError:
-            print("\033[91mInvalid input. Please enter a number.\033[0m")
 
 def pyscript_template():
     # Functionality for pyscript template
@@ -128,7 +111,6 @@ Usages:
         sys.exit()
     else:
         print(f"ERROR: Unknown template '{template_choice}'.\n")
-
 
 
 if __name__ == '__main__':
