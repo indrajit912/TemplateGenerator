@@ -361,21 +361,22 @@ class ProjectTemplate:
             `project_dir_path`: Path
         """
         _proj_name = self._project_name.title().replace(' ', '_')
+        _proj_dir_name = _proj_name.lower()
         project_dir = Directory(name=_proj_name)
 
         # Add `_proj_name` dir
         project_dir.add_directory(
-            name=_proj_name.lower()
+            name=_proj_dir_name
         )
 
         # Add `_proj_name/__init__.py`
-        project_dir._content[_proj_name].add_file(
+        project_dir._content[_proj_dir_name].add_file(
             name="__init__.py",
             content=PYPROJ_INIT_PY % _proj_name
         )
 
         # Add `_proj_name/model.py`
-        project_dir._content[_proj_name].add_file(
+        project_dir._content[_proj_dir_name].add_file(
             name="model.py",
             content=MODEL_PY % (_proj_name, self._author, self.TODAY)
         )
