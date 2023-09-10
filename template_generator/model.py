@@ -440,7 +440,7 @@ class ProjectTemplate:
         # Add `app/routes.py`
         project_dir._content['app'].add_file(
             name='routes.py',
-            content=ROUTES_PY
+            content=ROUTES_PY % (self._author, self.TODAY)
         )
 
         # Add `app/__init__.py`
