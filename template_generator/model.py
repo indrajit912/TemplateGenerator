@@ -437,7 +437,7 @@ class ProjectTemplate:
         --------
             `project_dir_path`: Path
         """
-        _proj_name = self._project_name.title().replace(' ', '_')
+        _proj_name = self._project_name.title().replace(' ', '')
         project_dir = Directory(name=_proj_name)
 
         # Add `app` directory
