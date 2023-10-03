@@ -360,23 +360,29 @@ class ProjectTemplate:
         --------
             `project_dir_path`: Path
         """
-        _proj_name = self._project_name.title().replace(' ', '_')
-        _proj_dir_name = _proj_name.lower()
-        project_dir = Directory(name=_proj_name)
+        _proj_name = "_".join(
+            [
+                e.title() 
+                for e in self._project_name.split(' ')
+            ]
+        )
+        _proj_module_name = _proj_name.lower()
+        _proj_dir_name = _proj_name.replace('_', '')
+        project_dir = Directory(name=_proj_dir_name)
 
         # Add `_proj_name` dir
         project_dir.add_directory(
-            name=_proj_dir_name
+            name=_proj_module_name
         )
 
         # Add `_proj_name/__init__.py`
-        project_dir._content[_proj_dir_name].add_file(
+        project_dir._content[_proj_module_name].add_file(
             name="__init__.py",
             content=PYPROJ_INIT_PY % _proj_name
         )
 
         # Add `_proj_name/model.py`
-        project_dir._content[_proj_dir_name].add_file(
+        project_dir._content[_proj_module_name].add_file(
             name="model.py",
             content=MODEL_PY % (_proj_name, self._author, self.TODAY)
         )
@@ -390,7 +396,7 @@ class ProjectTemplate:
         # Add `main.py`
         project_dir.add_file(
             name="main.py",
-            content=MAIN_PY % (_proj_name, self._author, self.TODAY, _proj_name)
+            content=MAIN_PY % (_proj_name, self._author, self.TODAY, _proj_module_name)
         )
 
         # Add `requirements.txt`
@@ -413,7 +419,7 @@ class ProjectTemplate:
 
         # Create the project_dir
         project_dir.create(path=self._root_dir)
-        project_dir_path: Path = self._root_dir / _proj_name
+        project_dir_path: Path = self._root_dir / _proj_dir_name
 
         # Create venv
         self.create_virtualenv(
