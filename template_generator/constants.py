@@ -105,7 +105,7 @@ def index():
 
 FLASK_REQU = r"""# Write down the modules you need to install and then
 # run the cmd: ```pip install -r requirements.txt```
-Flask==2.3.3
+Flask
 gunicorn
 python-dotenv
 """
