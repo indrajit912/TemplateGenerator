@@ -2,6 +2,7 @@
 #
 # Author: Indrajit Ghosh
 # Created On: Aug 20, 2023
+# Modified On: Mar 17, 2024
 #
 
 import subprocess, datetime, sys
@@ -443,55 +444,129 @@ class ProjectTemplate:
         # Add `app` directory
         project_dir.add_directory(name='app')
 
-        # Add `app/routes.py`
-        project_dir._content['app'].add_file(
+        # Add `app/main`
+        project_dir._content['app'].add_directory(name='main')
+
+        # Add `app/main/routes.py`
+        project_dir._content['app']._content['main'].add_file(
             name='routes.py',
-            content=ROUTES_PY % (self._author, self.TODAY)
+            content=ROUTES_PY % ('app/main/routes.py', self._author, self.TODAY, '.', 'main_bp')
         )
 
-        # Add `app/__init__.py`
-        project_dir._content['app'].add_file(
-            name="__init__.py",
-            content=FLASK_INIT
+        # Add `app/main/__init__.py`
+        project_dir._content['app']._content['main'].add_file(
+            name='__init__.py',
+            content=ROUTE_INIT_PY % (
+                'app/main/__init__.py',
+                self._author,
+                self.TODAY,
+                'main',
+                'main',
+                'main'
+            )
         )
 
-        # Add `app/templates`
-        project_dir._content['app'].add_directory(
-            name="templates"
+        # Add 'app/main/static'
+        project_dir._content['app']._content['main'].add_directory(
+            name='static'
         )
 
-        # Add `app/templates/index.html`
-        project_dir._content['app']._content['templates'].add_file(
-            name="index.html",
-            content=FLASK_APP_INDEX_HTML
-        )
+        # Add 'app/main/static/css
+        project_dir._content['app']._content['main']._content['static'].add_directory(name='css')
 
-        # Add `app/static/`
-        project_dir._content['app'].add_directory(
-            name="static"
-        )
-
-        # Add `app/static/css`
-        project_dir._content['app']._content['static'].add_directory(
-            name="css"
-        )
-
-        # Add `app/static/css/style.css`
-        project_dir._content['app']._content['static']._content['css'].add_file(
-            name="style.css",
+        # Add 'app/main/static/css/style.css'
+        project_dir._content['app']._content['main']._content['static']._content['css'].add_file(
+            name='style.css',
             content=FLASK_STYLE_CSS
         )
 
-        # Add `app/static/images`
-        project_dir._content['app']._content['static'].add_directory(
+        # Add 'app/main/static/css/error_style.css'
+        project_dir._content['app']._content['main']._content['static']._content['css'].add_file(
+            name='error_style.css',
+            content=ERR_STYLE_CSS
+        )
+
+        # Add `app/main/static/images`
+        project_dir._content['app']._content['main']._content['static'].add_directory(
             name="images"
         )
-        
+
+        # Add 'app/main/templates'
+        project_dir._content['app']._content['main'].add_directory(
+            name="templates"
+        )
+
+        # Add `app/main/templates/base.html`
+        _ext = (
+            r"<!-- %s"
+            + "\n"
+            + f"Author: {self._author}\nCreated On: {self.TODAY}\n"
+            + "-->"
+        ) 
+        project_dir._content['app']._content['main']._content['templates'].add_file(
+            name="base.html",
+            content=_ext % "\napp/main/base.html" + FLASK_BASE_HTML
+        )
+
+        # Add `app/main/templates/error_base.html`
+        project_dir._content['app']._content['main']._content['templates'].add_file(
+            name="error_base.html",
+            content=ERR_BASE_HTML
+        )
+
+        # Add `app/main/templates/index.html`
+        project_dir._content['app']._content['main']._content['templates'].add_file(
+            name="index.html",
+            content=_ext % '\napp/main/index.html' + FLASK_APP_INDEX_HTML
+        )
+
+        # Add `app/main/templates/errors`
+        project_dir._content['app']._content['main']._content['templates'].add_directory(name="errors")
+
+        # Add `app/main/templates/errors/404.html`
+        project_dir._content['app']._content['main']._content['templates']._content['errors'].add_file(
+            name='404.html',
+            content=ERR_404_HTML
+        )
+
+        # Add `app/main/templates/errors/500.html`
+        project_dir._content['app']._content['main']._content['templates']._content['errors'].add_file(
+            name='500.html',
+            content=ERR_500_HTML
+        )
+
+        # Add `app/__init__.py`
+        _init_ext = (
+            "# app/__init__.py\n# Webapp {self._proj_name}\n"
+            + f"# Author: {self._author}\n# Created On: {self.TODAY}\n"
+        )
+        project_dir._content['app'].add_file(
+            name='__init__.py',
+            content=_init_ext + APP_INIT_PY
+        )
+
+        # Add `app/error_handlers.py`
+        project_dir._content['app'].add_file(
+            name='error_handlers.py',
+            content=ERR_HANDLERS_PY % (self._author, self.TODAY)
+        )
+
+        # Add `app/extensions.py`
+        project_dir._content['app'].add_file(
+            name='extensions.py',
+            content=ERR_HANDLERS_PY % (self._author, self.TODAY)
+        )
 
         # Add .gitignore
         project_dir.add_file(
             name=".gitignore",
             content=PY_GITIGNORE
+        )
+
+        # Add .env
+        project_dir.add_file(
+            name=".env",
+            content=DOT_ENV
         )
 
         # Add `run.py`
@@ -509,7 +584,7 @@ class ProjectTemplate:
         # Add `config.py`
         project_dir.add_file(
             name="config.py",
-            content=FLASK_APP_CONFIG_PY
+            content=FLASK_APP_CONFIG_PY % (self._author, self.TODAY)
         )
 
         # Add `README.md`
