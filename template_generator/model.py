@@ -554,7 +554,7 @@ class ProjectTemplate:
         # Add `app/extensions.py`
         project_dir._content['app'].add_file(
             name='extensions.py',
-            content=ERR_HANDLERS_PY % (self._author, self.TODAY)
+            content="# Add your extensions here, such as FlaskSQLAlchemy, FlaskForm etc ..."
         )
 
         # Add .gitignore
