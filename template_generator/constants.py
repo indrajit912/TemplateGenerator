@@ -55,6 +55,11 @@ def create_app(config_class=get_config()):
     # Configure logging
     configure_logging(app)
 
+    # Register error handlers
+    from app.error_handlers import page_not_found, internal_server_error
+    app.register_error_handler(404, page_not_found)
+    app.register_error_handler(500, internal_server_error)
+
     from app.main import main_bp
     app.register_blueprint(main_bp)
 
@@ -685,18 +690,20 @@ ERR_BASE_HTML = r"""<!-- error_base.html -->
 </html>
 """
 
-ERR_404_HTML = r"""<!-- templates/errors/400.html -->
+ERR_404_HTML = r"""<!-- templates/errors/404.html -->
 
 {% extends 'error_base.html' %}
 
-{% block title %}Bad Request{% endblock %}
+{% block title %}Page Not Found{% endblock %}
+
 
 {% block content %}
 
-    <h1>400</h1>
-    <h2>Oops! Bad Request.</h2>
-    <p>It seems there was a problem with your request.
-      Please check the information you provided and try again.
+    <h1>404</h1>
+    <h2>Oops! You seem to be lost.</h2>
+    <p>The page you are searching for doesn't exist.
+      It's a mystery how you ended up here, but you can click the button below
+      to return to Indrajit's homepage.
     </p>
 
 {% endblock %}
