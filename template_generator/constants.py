@@ -83,7 +83,8 @@ from flask import Blueprint
     '%s', 
     __name__,
     template_folder="templates", 
-    static_folder="static"
+    static_folder="static",
+    static_url_path="/main/static"
 )
 
 from app.%s import routes
