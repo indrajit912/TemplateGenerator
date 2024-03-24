@@ -537,7 +537,7 @@ class ProjectTemplate:
 
         # Add `app/__init__.py`
         _init_ext = (
-            f"# app/__init__.py\n# Webapp {self._proj_name}\n"
+            f"# app/__init__.py\n# Webapp {_proj_name}\n"
             + f"# Author: {self._author}\n# Created On: {self.TODAY}\n"
         )
         project_dir._content['app'].add_file(
