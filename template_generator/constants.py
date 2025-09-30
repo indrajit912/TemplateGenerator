@@ -9,13 +9,14 @@ This module defines the routes and views for the Flask web application.
 Author: %s
 Created on: %s
 """
-
-from %s import %s
-from flask import render_template
-
 import logging
 
+from flask import render_template
+
+from %s import %s
+
 logger = logging.getLogger(__name__)
+
 
 #######################################################
 #                      Homepage
@@ -28,14 +29,21 @@ def index():
 '''
 
 APP_INIT_PY = r'''
-from flask import Flask
 import logging
-from config import get_config, LOG_FILE
+
+from flask import Flask
+
+# Local application imports
+from config import LOG_FILE, Config
+from .extensions import db, migrate, moment, csrf
+
 
 def configure_logging(app:Flask):
+    # --- Main application logger ---
     logging.basicConfig(
         format='[%(asctime)s] %(levelname)s %(name)s: %(message)s',
-        filename=str(LOG_FILE)
+        filename=str(LOG_FILE),
+        datefmt='%d-%b-%Y %I:%M:%S %p'
     )
 
     if app.debug:
@@ -45,7 +53,7 @@ def configure_logging(app:Flask):
         logging.getLogger('werkzeug').handlers = []
 
 
-def create_app(config_class=get_config()):
+def create_app(config_class=Config):
     """
     Creates an app with specific config class
     """
@@ -55,21 +63,76 @@ def create_app(config_class=get_config()):
     # Configure logging
     configure_logging(app)
 
-    # Register error handlers
-    from app.error_handlers import page_not_found, internal_server_error
-    app.register_error_handler(404, page_not_found)
-    app.register_error_handler(500, internal_server_error)
+     # Add cli commands
+    from cli import deploy
+    app.cli.add_command(deploy)
 
+    # Initialize extensions
+    db.init_app(app)
+    csrf.init_app(app)
+    migrate.init_app(app, db)
+    moment.init_app(app)
+
+    # register blueprints
     from app.main import main_bp
     app.register_blueprint(main_bp)
 
-    @app.route('/test/')
-    def test():
-        return '<h1>Testing the Flask Application!</h1>'
+    from app.auth import auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    from app.api import api_v1
+    csrf.exempt(api_v1)
+    app.register_blueprint(api_v1, url_prefix='/api/v1')
 
     return app
 
 '''
+
+API_INIT_PY = r"""# app/api/__init__.py
+#
+# Author: %s
+# Created On: %s
+#
+
+from app.api.v1 import api_v1
+"""
+
+API_V1_INIT_PY = r"""# app/api/v1/__init__.py
+#
+# Author: %s
+# Created On: %s
+#
+
+from flask import Blueprint
+
+api_v1 = Blueprint(
+    'api_v1', 
+    __name__
+)
+
+from app.api.v1 import user_api
+"""
+
+
+AUTH_ROUTES_PY = r"""# %s
+#
+# Author: %s
+# Created On: %s
+#
+
+import logging
+
+from flask import render_template
+from . import auth_bp
+
+logger = logging.getLogger(__name__)
+
+# Login view (route)
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    return render_template('login.html')
+
+"""
 
 ROUTE_INIT_PY = r"""# %s
 #
@@ -81,10 +144,7 @@ from flask import Blueprint
 
 %s_bp = Blueprint(
     '%s', 
-    __name__,
-    template_folder="templates", 
-    static_folder="static",
-    static_url_path="/main/static"
+    __name__
 )
 
 from app.%s import routes
@@ -114,7 +174,14 @@ if __name__ == '__main__':
     main()
 """
 
-DOT_ENV = r'''FLASK_ENV=dev'''
+DOT_ENV = r"""
+# Development environment variables
+FLASK_APP=run.py
+FLASK_ENV=development
+FLASK_RUN_HOST=0.0.0.0
+FLASK_RUN_PORT=8080
+FLASK_DEBUG=true
+"""
 
 RUN_PY = r'''# %s
 #
@@ -127,18 +194,7 @@ This script starts the Flask development server to run the web application.
 
 Usage:
     - Run the Flask development server:
-    >>> python3 run.py
-
-    - Run the gunicorn server
-    >>> /env/bin/gunicorn --bind 0.0.0.0:5000 run:app
-
-Database initialization:
-    1. flask shell
-        >>> from app import db
-        >>> from app.models.models import *
-        >>> db.create_all()
-
-    2. python run.py
+    >>> flask run
 
 Note: Flask Migration
     1. flask db init
@@ -150,9 +206,78 @@ Note: Flask Migration
 from app import create_app
 
 app = create_app()
+'''
+
+CLI_PY = r'''# cli.py
+#
+# Author: %s
+# Created on: %s
+#
+
+import logging
+import click
+from flask_migrate import upgrade
+from flask.cli import FlaskGroup
+from app import create_app
+
+cli = FlaskGroup(create_app=create_app)
+
+logger = logging.getLogger(__name__)
+
+@cli.command("deploy")
+def deploy():
+    """Run deployment tasks."""  
+    # migrate database to latest revision
+    upgrade()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=app.config['PORT'])'''
+    cli()
+'''
+
+SCRIPTS_UTILS_PY = r'''# Some utility functions
+#
+# Author: Indrajit Ghosh
+# Created On: May 10, 2025
+#
+import hashlib
+import secrets
+from datetime import datetime, timezone
+
+def utcnow():
+    """
+    Get the current UTC datetime.
+
+    Returns:
+        datetime: A datetime object representing the current UTC time.
+    """
+    return datetime.now(timezone.utc)
+
+
+def sha256_hash(raw_text:str):
+    """Hash the given text using SHA-256 algorithm.
+
+    Args:
+        raw_text (str): The input text to be hashed.
+
+    Returns:
+        str: The hexadecimal representation of the hashed value.
+
+    Example:
+        >>> sha256_hash('my_secret_password')
+        'e5e9fa1ba31ecd1ae84f75caaa474f3a663f05f4'
+    """
+    hashed = hashlib.sha256(raw_text.encode()).hexdigest()
+    return hashed
+
+def generate_token():
+    # Generate a secure random token (hex string)
+    token = secrets.token_hex(32)  # 64 chars long
+
+    # Hash the token for storage (never store plain tokens in code)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+    return token, token_hash
+'''
 
 REQUIREMENTS = """
 # Write down the modules you need to install and then
@@ -164,61 +289,57 @@ config.py
 
 Author: %s
 Created on: %s
+
+This module provides configuration settings for the SoundBit application,
+including email configuration, environment settings, and database URIs.
 """
 import os
+from pathlib import Path
 from os.path import join, dirname
 from dotenv import load_dotenv
-from pathlib import Path
 from secrets import token_hex
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
+class EmailConfig:
+    HERMES_API_KEY = os.environ.get("HERMES_API_KEY")
+    HERMES_EMAILBOT_ID = os.environ.get("HERMES_EMAILBOT_ID")
+    HERMES_BASE_URL = "https://hermesbot.pythonanywhere.com"
+
 class Config:
+    FLASK_APP_NAME = "SpendBit"
     BASE_DIR = Path(__name__).parent.absolute()
-    UPLOAD_DIR = BASE_DIR / 'uploads'
-    LOG_FILE = BASE_DIR / 'app.log'
-    PORT = os.environ.get("PORT") or 8080
+    APP_DATA_DIR = BASE_DIR / "app_data"
 
-    FLASK_ENV = os.environ.get("FLASK_ENV") or 'production'
-    if FLASK_ENV in ['dev', 'developement']:
-        FLASK_ENV = 'development'
-    elif FLASK_ENV in ['prod', 'production', 'pro']:
-        FLASK_ENV = 'production'
-    else:
-        FLASK_ENV = 'development'
-    
-    SECRET_KEY = os.environ.get('SECRET_KEY') or token_hex(16)
+    LOG_DIR = BASE_DIR / "logs"
+    LOG_FILE = LOG_DIR / f'{FLASK_APP_NAME.lower()}.log'
 
-class DevelopmentConfig(Config):
-    DEBUG = True
+    DATABASE_URI = os.environ.get("DATABASE_URI")
+    SQLALCHEMY_DATABASE_URI = DATABASE_URI or \
+        'sqlite:///' + os.path.join(BASE_DIR, f'{FLASK_APP_NAME.lower()}.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-class ProductionConfig(Config):
-    DEBUG = False
-    # Add production-specific configurations if needed
-
-def get_config():
-    """
-    Get the appropriate configuration based on the specified environment.
-    :return: Config object
-    """
-    if Config.FLASK_ENV == 'production':
-        return ProductionConfig()
-    else:
-        return DevelopmentConfig()
-    
 
 LOG_FILE = Config.LOG_FILE
+LOG_DIR = Config.LOG_DIR
+LOG_DIR.mkdir(exist_ok=True) 
 
 '''
 
 README_MD = r"""# Write your Markdown here"""
 
-FLASK_REQU = r"""# Write down the modules you need to install and then
-# run the cmd: ```pip install -r requirements.txt```
+FLASK_REQU = r"""
 Flask
-gunicorn
 python-dotenv
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Moment
+Flask-Login
+Flask-WTF
+email-validator
+pytz
+cryptography
 """
 
 
@@ -241,44 +362,62 @@ from app import routes
 FLASK_BASE_HTML = r"""
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>{% block title %}{% endblock %}</title>
-    
-    {% block styles %}
-    <link rel="stylesheet" href="{{ url_for('main.static', filename='css/style.css') }}">
-    
-    <!-- Add Bootstrap Stylesheet -->
+    <title>{% block title %}{% endblock %} - ProjectTitle</title>
 
-    <!-- Add stylesheets for Bootstrap icons -->
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+
+    {% block styles %}{% endblock %}
     
-    {% endblock %}
+    {% block head %}{% endblock %}
 </head>
+<body class="d-flex flex-column h-100">
 
-<body>
+    <!-- Main Content -->
+    <main class="flex-grow-1 mb-5">
+        <div class="container">
+            <!-- Flash messages -->
+            {% include "flash_msgs.html" %}
 
-<section id="main-content" class="container">
-    {% block content %}{% endblock %}
-</section>
+            <!-- Main content -->
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 
-<!-- Include any additional JavaScript or external (Bootstrap) scripts here -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
 
+    {{ moment.include_moment() }}
 </body>
 </html>
+
 """
 FLASK_APP_INDEX_HTML = r"""
 
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
 {% block title %}Home{% endblock %}
-{% block styles %}
-    {{ super() }}
-{% endblock %}
 
 {% block content %}
-    <h1>Welcome to my Homepage!</h1>
+{% include 'flash_msgs.html' %}
+
+    <h1>Hello World!</h1>
 {% endblock %}
+
 """
 
 FLASK_EXTENSIONS_PY = r"""# app/extensions.py
@@ -291,7 +430,7 @@ FLASK_EXTENSIONS_PY = r"""# app/extensions.py
 
 MIT_LICENSE = r"""MIT License
 
-Copyright (c) 2023 Indrajit Ghosh
+Copyright (c) 2025 Indrajit Ghosh
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -493,6 +632,76 @@ MODEL_PY = r"""# %s/model.py
 # Author: %s
 # Created on: %s
 #
+"""
+
+EXTENSIONS_PY = r"""
+
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_moment import Moment
+from flask_login import LoginManager
+from flask_wtf import CSRFProtect
+
+db = SQLAlchemy()
+migrate = Migrate()
+moment = Moment()
+login_manager = LoginManager()
+csrf = CSRFProtect()
+"""
+
+FLASH_MSG_HTML = r"""
+<svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+    <symbol id="check-circle-fill" viewBox="0 0 16 16">
+      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+    </symbol>
+    <symbol id="info-fill" viewBox="0 0 16 16">
+      <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+    </symbol>
+    <symbol id="exclamation-triangle-fill" viewBox="0 0 16 16">
+      <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+    </symbol>
+  </svg>
+  
+  <!-- get_flashed_messages(with_categories=True) = [(category, message)] -->
+  {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+          {% for message in messages %}
+              {% if 'error' in message[0] %}
+                  <div class="alert alert-danger d-flex alert-dismissible fade show" role="alert">
+                      <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+              {% elif 'success' in message[0] %}
+                  <div class="alert alert-success d-flex alert-dismissible fade show" role="alert">
+                      <svg class="bi flex-shrink-0 me-3" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
+              {% elif 'warning' in message[0] %}
+                  <div class="alert alert-warning d-flex alert-dismissible fade show" role="alert">
+                      <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+              {% elif 'info' in message[0] %}
+                  <div class="alert alert-info d-flex alert-dismissible fade show" role="alert">
+                      <svg class="bi flex-shrink-0 me-2" role="img" aria-label="Info:"><use xlink:href="#info-fill"/></svg>
+              {% else %}
+                  <div class="alert alert-secondary alert-dismissible fade show" role="alert">
+              {% endif %}
+                  {{ message[1] }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+          {% endfor %}
+      {% endif %}
+  {% endwith %}
+"""
+
+LOGIN_HTML = r"""
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+{% include 'flash_msgs.html' %}
+  
+<h1>Log In</h1>
+<h3>Welcome!</h3>
+
+{% endblock %}
+
 """
 
 FLASK_STYLE_CSS = r"""/* static/styles.css */

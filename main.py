@@ -20,10 +20,11 @@ def pyscript_template():
     # Functionality for pyscript template
     _script_name = input("Enter the python script name (e.g. `main.py`): ")
     _auth = input("Enter the author: ")
+    print(_script_name)
     _script_name = (
         _script_name
-        if _script_name.endswith('.py')
-        else _script_name + ".py"
+        if not _script_name.endswith('.py')
+        else _script_name[:-3]
     )
 
     _auth = (

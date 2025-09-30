@@ -350,7 +350,7 @@ class ProjectTemplate:
 
         else:
             print("\nA `pyscript` has been created at the following path:")
-            print(f"\t{self._root_dir}/{_script_name}\n")
+            print(f"\t{self._root_dir}/{_script_name}.py\n")
 
 
     def _create_pyproject_template(self):
@@ -466,73 +466,125 @@ class ProjectTemplate:
             )
         )
 
-        # Add 'app/main/static'
-        project_dir._content['app']._content['main'].add_directory(
+        # Add 'app/api'
+        project_dir._content['app'].add_directory(name='api')
+
+        # Add 'app/api/__init__.py'
+        project_dir._content['app']._content['api'].add_file(
+            name='__init__.py',
+            content=API_INIT_PY % (self._author, self.TODAY)
+        )
+
+        # Add 'app/api/v1'
+        project_dir._content['app']._content['api'].add_directory(name='v1')
+
+        # Add 'app/api/v1/__init__.py'
+        project_dir._content['app']._content['api']._content['v1'].add_file(
+            name='__init__.py',
+            content=API_V1_INIT_PY % (self._author, self.TODAY)
+        )
+
+        # Add 'app/api/v1/user_api.py'
+        project_dir._content['app']._content['api']._content['v1'].add_file(
+            name='user_api.py',
+            content=''
+        )
+
+        # Add 'app/auth'
+        project_dir._content['app'].add_directory(name='auth')
+
+        # Add `app/auth/routes.py`
+        project_dir._content['app']._content['auth'].add_file(
+            name='routes.py',
+            content=AUTH_ROUTES_PY % ('app/auth/routes.py', self._author, self.TODAY)
+        )
+
+        # Add 'app/auth/__init__.py'
+        project_dir._content['app']._content['auth'].add_file(
+            name='__init__.py',
+            content=ROUTE_INIT_PY % (
+                'app/auth/__init__.py',
+                self._author,
+                self.TODAY,
+                'auth',
+                'auth',
+                'auth'
+            )
+        )
+
+        # Add 'app/services'
+        project_dir._content['app'].add_directory(name='services')
+
+        # Add 'app/services/__init__.py'
+        project_dir._content['app']._content['services'].add_file(
+            name='__init__.py',
+            content=''
+        )
+
+        # Add 'app/utils'
+        project_dir._content['app'].add_directory(name='utils')
+
+        # Add 'app/utils/__init__.py'
+        project_dir._content['app']._content['utils'].add_file(
+            name='__init__.py',
+            content=''
+        )
+
+        # Add 'app/forms'
+        project_dir._content['app'].add_directory(name='forms')
+
+        # Add 'app/forms/__init__.py'
+        project_dir._content['app']._content['forms'].add_file(
+            name='__init__.py',
+            content=''
+        )
+
+        # Add 'app/static'
+        project_dir._content['app'].add_directory(
             name='static'
         )
 
-        # Add 'app/main/static/css
-        project_dir._content['app']._content['main']._content['static'].add_directory(name='css')
+        # Add 'app/static/css
+        project_dir._content['app']._content['static'].add_directory(name='css')
 
-        # Add 'app/main/static/css/style.css'
-        project_dir._content['app']._content['main']._content['static']._content['css'].add_file(
-            name='style.css',
-            content=FLASK_STYLE_CSS
-        )
 
-        # Add 'app/main/static/css/error_style.css'
-        project_dir._content['app']._content['main']._content['static']._content['css'].add_file(
-            name='error_style.css',
-            content=ERR_STYLE_CSS
-        )
+        # Add `app/static/img`
+        project_dir._content['app']._content['static'].add_directory(name="img")
 
-        # Add `app/main/static/images`
-        project_dir._content['app']._content['main']._content['static'].add_directory(
-            name="images"
-        )
+        # Add 'app/templates'
+        project_dir._content['app'].add_directory(name="templates")
 
-        # Add 'app/main/templates'
-        project_dir._content['app']._content['main'].add_directory(
-            name="templates"
-        )
-
-        # Add `app/main/templates/base.html`
+        # Add `app/templates/base.html`
         _ext = (
             r"<!-- %s"
             + "\n"
             + f"Author: {self._author}\nCreated On: {self.TODAY}\n"
             + "-->"
         ) 
-        project_dir._content['app']._content['main']._content['templates'].add_file(
+        project_dir._content['app']._content['templates'].add_file(
             name="base.html",
-            content=_ext % "\napp/main/base.html" + FLASK_BASE_HTML
+            content=_ext % "\napp/templates/base.html" + FLASK_BASE_HTML
         )
 
-        # Add `app/main/templates/error_base.html`
-        project_dir._content['app']._content['main']._content['templates'].add_file(
-            name="error_base.html",
-            content=ERR_BASE_HTML
+        # Add `app/templates/flash_msgs.html`
+        project_dir._content['app']._content['templates'].add_file(
+            name="flash_msgs.html",
+            content=_ext % '\napp/templates/flash_msgs.html' + FLASH_MSG_HTML
         )
 
-        # Add `app/main/templates/index.html`
-        project_dir._content['app']._content['main']._content['templates'].add_file(
+        # Add `app/templates/index.html`
+        project_dir._content['app']._content['templates'].add_file(
             name="index.html",
-            content=_ext % '\napp/main/index.html' + FLASK_APP_INDEX_HTML
+            content=_ext % '\napp/templates/index.html' + FLASK_APP_INDEX_HTML
         )
 
-        # Add `app/main/templates/errors`
-        project_dir._content['app']._content['main']._content['templates'].add_directory(name="errors")
+        # Add `app/templates/emails`
+        project_dir._content['app']._content['templates'].add_directory(name="emails")
 
-        # Add `app/main/templates/errors/404.html`
-        project_dir._content['app']._content['main']._content['templates']._content['errors'].add_file(
-            name='404.html',
-            content=ERR_404_HTML
-        )
-
-        # Add `app/main/templates/errors/500.html`
-        project_dir._content['app']._content['main']._content['templates']._content['errors'].add_file(
-            name='500.html',
-            content=ERR_500_HTML
+        # Add `app/templates/login.html`
+        project_dir._content['app']._content['templates'].add_file(
+            name='login.html',
+            content=_ext % '\napp/templates/login.html' + LOGIN_HTML
         )
 
         # Add `app/__init__.py`
@@ -545,16 +597,14 @@ class ProjectTemplate:
             content=_init_ext + APP_INIT_PY
         )
 
-        # Add `app/error_handlers.py`
-        project_dir._content['app'].add_file(
-            name='error_handlers.py',
-            content=ERR_HANDLERS_PY % (self._author, self.TODAY)
-        )
-
         # Add `app/extensions.py`
+        _ext_ext = (
+            f"# app/extensions.py\n# Webapp {_proj_name}\n"
+            + f"# Author: {self._author}\n# Created On: {self.TODAY}\n"
+        )
         project_dir._content['app'].add_file(
             name='extensions.py',
-            content="# Add your extensions here, such as FlaskSQLAlchemy, FlaskForm etc ..."
+            content=_ext_ext + EXTENSIONS_PY
         )
 
         # Add .gitignore
@@ -569,10 +619,22 @@ class ProjectTemplate:
             content=DOT_ENV
         )
 
+        # Add .env.example
+        project_dir.add_file(
+            name=".env.example",
+            content=DOT_ENV
+        )
+
         # Add `run.py`
         project_dir.add_file(
             name="run.py",
             content=RUN_PY % (_proj_name, self._author, self.TODAY)
+        )
+
+        # Add `cli.py`
+        project_dir.add_file(
+            name="cli.py",
+            content=CLI_PY % (self._author, self.TODAY)
         )
 
         # Add `requirements.txt`
@@ -601,6 +663,12 @@ class ProjectTemplate:
 
         # Add `scripts` dir
         project_dir.add_directory(name="scripts")
+
+        # Add `scripts/utils.py`
+        project_dir._content['scripts'].add_file(
+            name='utils.py',
+            content=SCRIPTS_UTILS_PY
+        )
 
 
         # Create the project_dir
