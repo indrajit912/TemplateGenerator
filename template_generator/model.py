@@ -512,6 +512,21 @@ class ProjectTemplate:
             )
         )
 
+        # Add 'app/errors'
+        project_dir._content['app'].add_directory(name='errors')
+
+        # Add 'app/errors/__init__.py'
+        project_dir._content['app']._content['errors'].add_file(
+            name='__init__.py',
+            content=ERR_INIT_PY
+        )
+
+        # Add 'app/errors/handlers.py'
+        project_dir._content['app']._content['errors'].add_file(
+            name='handlers.py',
+            content=HANDLERS_PY % (self._author, self.TODAY)
+        )
+
         # Add 'app/services'
         project_dir._content['app'].add_directory(name='services')
 
@@ -547,6 +562,12 @@ class ProjectTemplate:
         # Add 'app/static/css
         project_dir._content['app']._content['static'].add_directory(name='css')
 
+        # Add 'app/static/css/styles.css
+        project_dir._content['app']._content['static']._content['css'].add_file(
+            name='styles.css',
+            content=FLASK_STYLE_CSS
+        )
+
 
         # Add `app/static/img`
         project_dir._content['app']._content['static'].add_directory(name="img")
@@ -580,6 +601,45 @@ class ProjectTemplate:
 
         # Add `app/templates/emails`
         project_dir._content['app']._content['templates'].add_directory(name="emails")
+
+        # Add `app/templates/errors`
+        project_dir._content['app']._content['templates'].add_directory(name="errors")
+
+        # Add `app/templates/emails/404.html`
+        project_dir._content['app']._content['templates']._content['errors'].add_file(
+            name='404.html',
+            content=ERR_404_HTML
+        )
+
+        # Add `app/templates/emails/400.html`
+        project_dir._content['app']._content['templates']._content['errors'].add_file(
+            name='400.html',
+            content=ERR_400_HTML
+        )
+
+        # Add `app/templates/emails/401.html`
+        project_dir._content['app']._content['templates']._content['errors'].add_file(
+            name='401.html',
+            content=ERR_401_HTML
+        )
+
+        # Add `app/templates/emails/403.html`
+        project_dir._content['app']._content['templates']._content['errors'].add_file(
+            name='403.html',
+            content=ERR_403_HTML
+        )
+
+        # Add `app/templates/emails/500.html`
+        project_dir._content['app']._content['templates']._content['errors'].add_file(
+            name='500.html',
+            content=ERR_500_HTML
+        )
+
+        # Add `app/templates/error_base.html`
+        project_dir._content['app']._content['templates'].add_file(
+            name='error_base.html',
+            content=ERR_BASE_HTML
+        )
 
         # Add `app/templates/login.html`
         project_dir._content['app']._content['templates'].add_file(
@@ -625,10 +685,10 @@ class ProjectTemplate:
             content=DOT_ENV
         )
 
-        # Add `run.py`
+        # Add `server.py`
         project_dir.add_file(
-            name="run.py",
-            content=RUN_PY % (_proj_name, self._author, self.TODAY)
+            name="server.py",
+            content=SERVER_PY % (_proj_name, self._author, self.TODAY)
         )
 
         # Add `cli.py`

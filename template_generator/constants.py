@@ -11,7 +11,7 @@ Created on: %s
 """
 import logging
 
-from flask import render_template
+from flask import render_template, abort
 
 from %s import %s
 
@@ -25,6 +25,39 @@ logger = logging.getLogger(__name__)
 def index():
     logger.info("Visited homepage.")
     return render_template("index.html")
+
+    #######################################################
+#                      Test Errors
+#######################################################
+@main_bp.route('/dev/errors/<int:code>')
+def dev_error(code):
+    """
+    Test route to manually trigger error pages.
+
+    Supported codes:
+        401 - Unauthorized
+        403 - Forbidden
+        404 - Not Found
+        422 - Unprocessable Entity
+        500 - Internal Server Error
+
+    Example usage:
+        /dev/error/403
+    """
+    if code == 401:
+        abort(401)
+    elif code == 400:
+        abort(400)
+    elif code == 403:
+        abort(403)
+    elif code == 404:
+        abort(404)
+    elif code == 422:
+        abort(422)
+    elif code == 500:
+        abort(500)
+    else:
+        return f"Unsupported error code {code}. Try 400, 401, 403, 404, 422, or 500."
 
 '''
 
@@ -62,6 +95,10 @@ def create_app(config_class=Config):
 
     # Configure logging
     configure_logging(app)
+
+    # Register error handlers
+    from app.errors.handlers import register_error_handlers
+    register_error_handlers(app)
 
      # Add cli commands
     from cli import deploy
@@ -183,7 +220,7 @@ FLASK_RUN_PORT=8080
 FLASK_DEBUG=true
 """
 
-RUN_PY = r'''# %s
+SERVER_PY = r'''# %s
 #
 # Author: %s
 # Created on: %s
@@ -367,6 +404,8 @@ FLASK_BASE_HTML = r"""
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>{% block title %}{% endblock %} - ProjectTitle</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -704,7 +743,7 @@ LOGIN_HTML = r"""
 
 """
 
-FLASK_STYLE_CSS = r"""/* static/styles.css */
+FLASK_STYLE_CSS = r"""/* static/css/styles.css */
 
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
 
@@ -723,52 +762,42 @@ html {
     scroll-behavior: smooth;
 }
 
-:root {
-    --primary-color: #0056b3;   /* Dark Blue */
-    --secondary-color: #4caf50; /* Green */
-    --background-color: #f4f4f4; /* Light Gray */
-    --text-color: #333;
+/* Prevent horizontal overflow globally */
+body, html {
+    overflow-x: hidden;
+    max-width: 100vw;  /* Prevent viewport overflow */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Make sure all containers don't exceed viewport */
+  .container, .register-container, .card {
+    max-width: 100vw;
+    box-sizing: border-box;
+    padding-left: 1rem;  /* or your preferred horizontal padding */
+    padding-right: 1rem;
+  }
+  
 
-    --color-black: #000000;  
-    --color-white: #ffffff;
-    --color-dark: #2c2c2c;      /* Dark Gray */
-    --color-dark-variant: #444; /* Slightly Darker Gray */
+/* To make the icons in the flash message smaller */
+svg.bi {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
-
-body {
-    background-color: var(--background-color);
+/* Twitter X icon */
+.fa.fa-twitter::before {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    content: "";
+    background-color: currentColor;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg viewBox="0 -8 26 30" xmlns="http://www.w3.org/2000/svg"><g><path fill="white" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></g></svg>') no-repeat center;
+    mask: url('data:image/svg+xml;utf8,<svg viewBox="0 -8 26 30" xmlns="http://www.w3.org/2000/svg"><g><path fill="white" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></g></svg>') no-repeat center;
+    background-position: center 3px;
 }
 
-/* Example style for the home page content */
-h1,h2,h3,h4,h5 {
-    line-height: 120%;
-}
-
-h1 {
-    font-size: 48px;
-    color: var(--color-black);
-}
-
-h2 {
-    font-size: 28px;
-    color: var(--color-dark-variant);
-}
-
-h3 {
-    font-size: 26px;
-    color: var(--color-black);
-}
-
-h4 {
-    font-size: 19px;
-    color: var(--color-black);
-}
-
-h4 {
-    font-size: 18px;
-    font-weight: 400;
-}
 """
 
 ERR_STYLE_CSS = r"""/* errors/static/css/error_style.css */
@@ -851,115 +880,158 @@ h2 {
   
 """
 
-ERR_BASE_HTML = r"""<!-- error_base.html -->
-
-<!DOCTYPE html>
+ERR_BASE_HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('main.static', filename='css/error_style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Error{% endblock %} - SpendBit</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    /* Optional: ensure min height on small screens to center content nicely */
+    body, html {
+      height: 100%;
+    }
+    main.container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-light">
+  <main class="container text-center">
+    {% block content %}{% endblock %}
+  </main>
 
-    <div class="error_container">
-        <div class="col-md-6 align-self-center">
-            {% block content %}{% endblock %}
-    
-            <button class="btn green" id="homeButton">HOME</button>
-            <button class="btn green" id="backButton">BACK</button>
-            {% if error %}
-                <button class="btn green" id="detailsButton">DETAILS</button>
-                <div id="errorDetails" style="display: none;">
-                    <p>{{ error }}</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <script>
-        document.getElementById("homeButton").addEventListener("click", function() {
-            window.location.href = "/"; // Redirect to the home page
-        });
-
-        document.getElementById("backButton").addEventListener("click", function() {
-            window.history.back(); // Go back in the browser history
-        });
-
-        var detailsButton = document.getElementById("detailsButton");
-        var errorDetails = document.getElementById("errorDetails");
-
-        if (detailsButton && errorDetails) {
-            detailsButton.addEventListener("click", function() {
-                errorDetails.style.display = (errorDetails.style.display === "none") ? "block" : "none";
-            });
-        }
-    </script>
-    
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 """
 
-ERR_404_HTML = r"""<!-- templates/errors/404.html -->
-
-{% extends 'error_base.html' %}
+ERR_404_HTML = r"""{% extends 'error_base.html' %}
 
 {% block title %}Page Not Found{% endblock %}
 
-
 {% block content %}
-
-    <h1>404</h1>
-    <h2>Oops! You seem to be lost.</h2>
-    <p>The page you are searching for doesn't exist.
-      It's a mystery how you ended up here, but you can click the button below
-      to return to Indrajit's homepage.
+<div class="mx-auto p-5 bg-white rounded shadow" style="max-width: 420px;">
+    <h1 class="display-1 text-danger fw-bold mb-4">404</h1>
+    <p class="lead fs-4 mb-4">😕 Oops! The page you're looking for can't be found.</p>
+    <p class="mb-4 text-muted">
+        It might have been moved or deleted. Try returning to the homepage.
     </p>
-
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg shadow">
+        <i class="bi bi-house-door-fill me-2"></i>Go Home
+    </a>
+</div>
 {% endblock %}
 """
 
-ERR_500_HTML = r"""<!-- templates/errors/500.html -->
+ERR_500_HTML = r"""{% extends 'error_base.html' %}
 
-{% extends 'error_base.html' %}
-
-{% block title %}Internal Server Error{% endblock %}
+{% block title %}Server Error{% endblock %}
 
 {% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-4">500</h1>
+    <p class="lead">Oops! Something went wrong on our end.</p>
+    <p>We're working to fix it. Please try again later.</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-danger">Go Back Home</a>
+</div>
+{% endblock %}
+"""
 
-    <h1>500</h1>
-    <h2>Oops! Internal Server Error.</h2>
-    <p>We're sorry, but there's been an internal server error on this website.
-      Indrajit Ghosh, the owner of this site, has been notified and is actively working to fix the issue.
-      Feel free to try again later. If the problem persists or if you would like to report this issue,
-      please contact Indrajit.
-      Thank you for your patience.
-    </p>
+ERR_400_HTML = r"""{% extends "error_base.html" %}
 
-{% endblock %}"""
+{% block title %}Bad Request{% endblock %}
 
-ERR_HANDLERS_PY = r"""# Error Handlers for the site
+{% block content %}
+<div class="container text-center mt-5">
+  <h1 class="display-3 text-warning">400</h1>
+  <h2 class="mb-3">Bad Request</h2>
+  <p class="lead">The request could not be understood or was missing required parameters.</p>
+  <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-3">Go Home</a>
+</div>
+{% endblock %}
+"""
+
+ERR_401_HTML = r"""{% extends 'error_base.html' %}
+
+{% block title %}Unauthorized{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-4">401</h1>
+    <p class="lead">You must be logged in to access this page.</p>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Login</a>
+</div>
+{% endblock %}
+"""
+ERR_403_HTML = r"""{% extends 'error_base.html' %}
+
+{% block title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-4">403</h1>
+    <p class="lead">You don't have permission to access this page.</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-warning">Return to Home</a>
+</div>
+{% endblock %}
+"""
+
+ERR_INIT_PY = r'''# app/errors/__init__.py
+"""
+Error handlers package for SpendBit
+"""
+
+from .handlers import register_error_handlers
+
+__all__ = ["register_error_handlers"]
+'''
+
+HANDLERS_PY = r"""# app/errors/handlers.py
 #
 # Author: %s
 # Created On: %s
 #
 
-from flask import render_template
+from flask import render_template, jsonify, request
 
+def register_error_handlers(app):
+    @app.errorhandler(400)
+    def bad_request(error):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Bad Request", "message": str(error)}), 400
+        return render_template("errors/400.html"), 400
 
-##########################################
-#        Page not found!
-##########################################
-def page_not_found(error):
-    return render_template('errors/404.html'), 404
+    @app.errorhandler(401)
+    def bad_request(error):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Unauthorized", "message": str(error)}), 401
+        return render_template("errors/401.html"), 401
 
+    @app.errorhandler(403)
+    def forbidden(error):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Forbidden"}), 403
+        return render_template("errors/403.html"), 403
 
-##########################################
-#        Internal Server Error!
-##########################################
-def internal_server_error(error):
-    return render_template('errors/500.html', error=error), 500
+    @app.errorhandler(404)
+    def not_found(error):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Not Found"}), 404
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "Internal Server Error"}), 500
+        return render_template("errors/500.html"), 500
 
 """
 
