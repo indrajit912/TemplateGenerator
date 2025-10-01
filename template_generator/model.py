@@ -673,21 +673,24 @@ class ProjectTemplate:
             content=PY_GITIGNORE
         )
 
+        # Name of the dev server filename
+        _dev_server_file = 'server.py'
+
         # Add .env
         project_dir.add_file(
             name=".env",
-            content=DOT_ENV
+            content=DOT_ENV % _dev_server_file
         )
 
         # Add .env.example
         project_dir.add_file(
             name=".env.example",
-            content=DOT_ENV
+            content=DOT_ENV % _dev_server_file
         )
 
         # Add `server.py`
         project_dir.add_file(
-            name="server.py",
+            name=_dev_server_file,
             content=SERVER_PY % (_proj_name, self._author, self.TODAY)
         )
 

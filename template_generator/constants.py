@@ -213,7 +213,7 @@ if __name__ == '__main__':
 
 DOT_ENV = r"""
 # Development environment variables
-FLASK_APP=run.py
+FLASK_APP=%s
 FLASK_ENV=development
 FLASK_RUN_HOST=0.0.0.0
 FLASK_RUN_PORT=8080
